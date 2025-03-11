@@ -26,7 +26,30 @@ def parse():
         return jsonify({'error': 'No input provided'}), 400
     
     try: 
-        result = analyzer.parse(input_sentence)
-        return jsonify({'parsed': result})
+        parsed = analyzer.parse(input_sentence)
+        print(parsed.pformat())
+        return jsonify({'parsed': parsed.pformat()})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+# {'我': [
+#     {
+#         'definitions': ['I', 'me', 'my'],
+#         'kind': 'Simplified',
+#         'match': '我',    
+#         'pinyin': ['wo3']
+#     }
+# ],
+# '爱': [{'definitions': ['to love',
+#                        'to be fond of',
+#                        'to like',
+#                        'affection',
+#                        'to be inclined (to do sth)',
+#                        'to tend to (happen)'],
+#        'kind': 'Simplified',
+#        'match': '愛',
+#        'pinyin': ['ai4']}],
+# '看书': [{'definitions': ['to read', 'to study'],
+#         'kind': 'Simplified',
+#         'match': '看書',
+#         'pinyin': ['kan4', 'shu1']}]}

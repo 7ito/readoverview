@@ -1,4 +1,4 @@
-function Ciyu({ text, pinyin, definitions }) {
+function Ciyu({ text, definitions, pinyin }) {
 
     return (
       <div className="pane p-2 flex justify-center items-center flex-col">

@@ -46,7 +46,7 @@ def parse():
         parsed = analyzer.parse(input_sentence)
 
         data = ast.literal_eval(parsed.pformat())
-        res = {}
+        res = []
         for entry in data['parsed']:
             definitions = entry['dict_data'][0]['definitions']
             definitions_string = " / ".join(definitions)
@@ -54,13 +54,14 @@ def parse():
             context_definition = ollama_request(entry['token'][0], definitions_string, input_sentence)
 
             item = {
+                'token': entry['token'][0],
                 'definitions': definitions,
                 'kind': entry['dict_data'][0]['kind'],
                 'match': entry['dict_data'][0]['match'],
                 'pinyin': entry['dict_data'][0]['pinyin'],
-                'predicted_definition': context_definition
+                'predicted_definition': context_definition,
             }
-            res[entry['token'][0]] = item
+            res.append(item)
 
         translation = ts.translate_text(input_sentence, 'google', 'zh', 'en')
         

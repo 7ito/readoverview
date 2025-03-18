@@ -1,22 +1,9 @@
 import { useEffect, useState } from "react";
 
-function Ciyu({ text, pinyin, definitions, predictedDefinition }) {
+function Ciyu({ text, pinyin, prettyPinyin, definitions, predictedDefinition }) {
 
-  const Zi = ({ text, pinyin }) => {
+  const Zi = ({ text, pinyin, prettyPinyin }) => {
     const [fontColor, setFontColor] = useState("");
-
-    const toneMappings = {
-      'a': {1: 'ā', 2: 'á', 3: 'ǎ', 4: 'à'},
-      'e': {1: 'ē', 2: 'é', 3: 'ě', 4: 'è'},
-      'i': {1: 'ī', 2: 'í', 3: 'ǐ', 4: 'ì'},
-      'o': {1: 'ō', 2: 'ó', 3: 'ǒ', 4: 'ò'},
-      'u': {1: 'ū', 2: 'ú', 3: 'ǔ', 4: 'ù'},
-      'A': {1: 'Ā', 2: 'Á', 3: 'Ǎ', 4: 'À'},
-      'E': {1: 'Ē', 2: 'É', 3: 'Ě', 4: 'È'},
-      'I': {1: 'Ī', 2: 'Í', 3: 'Ǐ', 4: 'Ì'},
-      'O': {1: 'Ō', 2: 'Ó', 3: 'Ǒ', 4: 'Ò'},
-      'U': {1: 'Ū', 2: 'Ú', 3: 'Ǔ', 4: 'Ù'},
-     }
 
     useEffect(() => {
       switch (pinyin.substring(pinyin.length-1)) {
@@ -38,27 +25,10 @@ function Ciyu({ text, pinyin, definitions, predictedDefinition }) {
       }      
     }, [pinyin]);
 
-    function convertPinyin(pinyin) {
-      const tone = parseInt(pinyin.slice(-1), 10);
-
-      const base = pinyin.slice(0, -1);
-
-      const vowelMatch = base.match(/[aeiouv]/);
-      if (!vowelMatch) return base; 
-
-      const vowel = vowelMatch[0];
-      const index = vowelMatch.index;
-
-      const toneMarkedVowel = toneMappings[vowel][tone - 1] || vowel;
-      const result = base.slice(0, index) + toneMarkedVowel + base.slice(index + 1);
-
-      return result;
-    }
-
     return (
       <div className="flex flex-col justify-center items-center" style={{'color': fontColor}}>
         <div className="text-xl">
-          {convertPinyin(pinyin)}
+          {prettyPinyin}
         </div>
         <div className="text-4xl">
           {text}
@@ -70,7 +40,7 @@ function Ciyu({ text, pinyin, definitions, predictedDefinition }) {
   return (
     <div className="pane p-4 flex justify-center items-center flex-col max-w-[150px]">
       <div className="flex flex-row">
-        {pinyin.map((pinyinEntry, index) => <Zi text={text.substring(index, index + 1)} pinyin={pinyinEntry} />)}
+        {pinyin.map((pinyinEntry, index) => <Zi text={text.substring(index, index + 1)} pinyin={pinyinEntry} prettyPinyin={prettyPinyin[index]} />)}
       </div>
       <div className="definition">{predictedDefinition}</div>
     </div>

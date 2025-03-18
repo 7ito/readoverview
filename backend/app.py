@@ -53,12 +53,15 @@ def parse():
 
             context_definition = ollama_request(entry['token'][0], definitions_string, input_sentence)
 
+            pretty_pinyin = list(map(analyzer.converter.prettify, entry['dict_data'][0]['pinyin']))
+
             item = {
                 'token': entry['token'][0],
                 'definitions': definitions,
                 'kind': entry['dict_data'][0]['kind'],
                 'match': entry['dict_data'][0]['match'],
                 'pinyin': entry['dict_data'][0]['pinyin'],
+                'pretty_pinyin': pretty_pinyin,
                 'predicted_definition': context_definition,
             }
             res.append(item)

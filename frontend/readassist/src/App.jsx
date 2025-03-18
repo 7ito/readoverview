@@ -36,12 +36,13 @@ function App() {
           <div className="inner-container bg-red-400 min-w-[90vw] min-h-[90vh] rounded-md flex items-center justify-center">
             {isPreview ? (
               <>
-                <div className="w-full h-full flex items-center justify-center">
+                <div className="w-full h-full flex items-start justify-center">
                   {parsedData.map((entry) => (
                     <Ciyu
                       key={entry.token}
                       text={entry.token}
                       pinyin={entry.pinyin}
+                      prettyPinyin={entry.pretty_pinyin}
                       definitions={entry.definitions}
                       predictedDefinition={entry.predicted_definition}
                     />

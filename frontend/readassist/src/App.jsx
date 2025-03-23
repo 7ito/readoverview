@@ -9,6 +9,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const [parsedData, setParsedData] = useState([]);
+  const [translation, setTranslation] = useState("");
 
   const sendParse = async () => {
     setIsLoading(true);
@@ -21,9 +22,10 @@ function App() {
     });
     const data = await response.json();
     console.log(data);
-    setParsedData(data.parsed);
+    // setParsedData(data.parsed);
+    setTranslation(data.translation);
     setIsLoading(false);
-    setIsPreview(true);
+    // setIsPreview(true);
   };
 
   return (
@@ -33,9 +35,10 @@ function App() {
           <MoonLoader size={80} loading={isLoading} />
         </div>
       ) : (
-          <div className="inner-container bg-red-400 min-w-[90vw] min-h-[90vh] rounded-md flex items-center justify-center">
+          <div className="inner-container bg-red-400 min-w-[90vw] min-h-[90vh] rounded-md flex flex-col items-center justify-center">
             {isPreview ? (
               <>
+                <div className="text-5xl text-black">{translation}</div>
                 <div className="w-full h-full flex items-start justify-center">
                   {parsedData.map((entry) => (
                     <Ciyu

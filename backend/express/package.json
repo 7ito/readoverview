@@ -1,0 +1,21 @@
+{
+  "name": "express",
+  "version": "1.0.0",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@node-rs/jieba": "^2.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mdbg": "^1.73.0",
+    "ollama": "^0.5.14",
+    "translate": "^3.0.1"
+  }
+}

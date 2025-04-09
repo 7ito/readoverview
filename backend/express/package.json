@@ -17,7 +17,9 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "ollama": "^0.5.14",
-    "translate": "^3.0.1"
+    "translate": "^3.0.1",
+    "zod": "^3.24.2",
+    "zod-to-json-schema": "^3.24.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

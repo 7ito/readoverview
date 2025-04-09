@@ -56,7 +56,7 @@ function App() {
               <>
                 <input
                   type="text"
-                  className="w-full h-[90vh] p-4 text-4xl text-white"
+                  className="w-full h-[90vh] p-4 text-4xl text-white text-center"
                   placeholder="Paste a Chinese sentence here!"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}

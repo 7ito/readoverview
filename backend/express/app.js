@@ -166,6 +166,9 @@ const ollamaRequest = async (sentence, segments, dictionaryData, translation) =>
   - yu3: dialect; language; speech
   - yu4: (literary) to tell; to let (sb) know
   In this example there are two entries for the word '語': yu3 and yu4. Definitions are delimited by ';'. 
+  yu3 has 3 definitions: 'dialect', 'language', and 'speech'
+  yu4 has 2 definitions: '(literary) to tell' and 'to let (sb) know'
+  Your goal is choose ONE definition from all entries, and the corresponding pinyin reading for the word in the context of the sentence.
 
   Rules: 
   - Choose only ONE definition. There should be no ';' in the definition you give

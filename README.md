@@ -8,4 +8,4 @@
 - Input sanitization, handle inputs:
   - that aren't Chinese sentences
   - that are longer
-  - 
+- Some cases where pinyin reading has a colon to denote tone: e.g. nu:3 (女)

@@ -22,10 +22,10 @@ function App() {
     });
     const data = await response.json();
     console.log(data);
-    // setParsedData(data.parsed);
+    setParsedData(data.parsed);
     setTranslation(data.translation);
     setIsLoading(false);
-    // setIsPreview(true);
+    setIsPreview(true);
   };
 
   return (
@@ -40,14 +40,12 @@ function App() {
               <>
                 <div className="text-5xl text-black">{translation}</div>
                 <div className="w-full h-full flex items-start justify-center">
-                  {parsedData.map((entry) => (
+                  {parsedData.segments.map((entry) => (
                     <Ciyu
                       key={entry.token}
                       text={entry.token}
-                      pinyin={entry.pinyin}
-                      prettyPinyin={entry.pretty_pinyin}
-                      definitions={entry.definitions}
-                      predictedDefinition={entry.predicted_definition}
+                      pinyin={entry.pinyin.split(" ")}
+                      definition={entry.definition}
                     />
                   ))}
                 </div>

@@ -28,6 +28,11 @@ function App() {
     setIsPreview(true);
   };
 
+  const resetPage = () => {
+    setUserInput("");
+    setIsPreview(false);
+  }
+
   return (
     <div className="root-container flex bg-red-300 min-w-screen min-h-screen items-center justify-center">
       {isLoading ? (
@@ -35,11 +40,12 @@ function App() {
           <MoonLoader size={80} loading={isLoading} />
         </div>
       ) : (
-          <div className="inner-container bg-red-400 min-w-[90vw] min-h-[90vh] rounded-md flex flex-col items-center justify-center">
+          <>
             {isPreview ? (
-              <>
-                <div className="text-5xl text-black">{translation}</div>
-                <div className="w-full h-full flex items-start justify-center">
+              <div className="inner-container bg-red-300 flex flex-col items-center justify-center">
+                <button className="absolute top-0 left-0 focus:outline-0" onClick={() => resetPage()}>Back</button>
+                <div className="text-4xl text-black text-center py-3">{translation}</div>
+                <div className="flex items-start justify-center flex-wrap">
                   {parsedData.segments.map((entry) => (
                     <Ciyu
                       key={entry.token}
@@ -49,22 +55,22 @@ function App() {
                     />
                   ))}
                 </div>
-              </>
+              </div>
             ) : (
-              <>
-                <input
+              <div className="inner-container bg-red-400 min-w-[90vw] min-h-[90vh] rounded-md flex flex-col items-center justify-center">
+                <textarea
                   type="text"
-                  className="w-full h-[90vh] p-4 text-4xl text-white text-center"
+                  className="w-[90vw] max-h-[90vh] p-4 text-4xl text-white text-center focus:outline-0 leading-normal resize-none"
                   placeholder="Paste a Chinese sentence here!"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
-                />
+                >
+                </textarea>
       
                 {userInput === "" ? "" : <button onClick={sendParse}>Go</button>}
-              </>
+              </div>
             )}
-  
-          </div>
+          </>
       )}
     </div>
   );

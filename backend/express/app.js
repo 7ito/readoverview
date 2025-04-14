@@ -1,16 +1,13 @@
 import express from "express";
 import cors from "cors";
 import cedict from "cc-cedict";
-import { Ollama } from "ollama";
 import translate from "translate";
-import { z } from 'zod';
-import zodToJsonShema from 'zod-to-json-schema';
 import OpenAI from "openai/index.mjs";
 import 'dotenv/config'
+import isChinese from 'is-chinese';
 
 const app = express();
 const PORT = 5000;
-const OLLAMA_API_URL = "http://localhost:11434";
 
 const SYSTEM_PROMPT = `Instructions:
   You are a Mandarin language expert. You will be given a Mandarin sentence, it's English translation, the segmentation of it's words (词语), and the dictionary data for each word. Your job is to analyze the sentence, and choose the most likely pinyin reading and dictionary definition for each word in the context of the sentence. 
@@ -36,8 +33,10 @@ const SYSTEM_PROMPT = `Instructions:
   - Choose only ONE definition. There should be no ';' in the definition you give
   - Choose the definition you deem to be most likely to be meaning of the word in the context of the sentence
   - DO NOT hallucinate pinyin readings or definitions, the pinyin reading and definition you choose must come the dictionary data given to you
+  - Preserve all punctuation in a sentence: Return a segment like { token: "。", pinyin: "", definition: "" } or { token: "，", pinyin: "", definition: "" }
+  - For segments of the sentence that are in English or are a number, just return the token with pinyin and definition empty. e.g. { token: "2024", pinyin: "", definition: "" } or { token: "NBA", pinyin: "", definition: "" }
 
-  Format: 
+  Format:
   Format response as JSON
   - Output JSON with "segments" array
   - Each entry MUST have:
@@ -86,7 +85,7 @@ const SYSTEM_PROMPT = `Instructions:
 
   Example 2 
   User:
-  Sentence: 你有光明的未来
+  Sentence: 你有光明的未来。
   Translation: You have a bright future
     
   CC-CEDICT Dictionary Data:
@@ -116,6 +115,7 @@ const SYSTEM_PROMPT = `Instructions:
       { "token": "光明", "pinyin": "guang1 ming2", "definition": "bright (prospects etc)" },
       { "token": "的", "pinyin": "de5", "definition": "(used after an attribute when it modifies a noun)" },
       { "token": "未来", "pinyin": "wei4 lai2", "definition": "future" },
+      { "token": "。", "pinyin": "", "definition": "" },
     ]
   }`;
 
@@ -156,34 +156,38 @@ app.post("/parse", async (req, res) => {
       const segment = segmentEntry.segment;
       let entry = await getCedictEntry(segment);
       if (entry === null) {
-        if (segment.length == 1) {
-          const item = {
-            token: segment,
-            entries: "punctuation",
-          };
-          dictEntries.push(item);
-        } else if (segment.length == 2) {
-          for (let i = 0; i < segment.length; i++) {
-            let individual = await getCedictEntry(segment[i]);
-
-            const item = {
-              token: segment[i],
-              entries: individual,
-            };
-            dictEntries.push(item);
-            finalSegments.push(segment[i]);
-          }
+        if (!isChinese(segment)) {
+          finalSegments.push(segment);
         } else {
-          const edgeCaseSegments = await recursiveSegment(segment);
-          for (let i = 0; i < edgeCaseSegments.length; i++) {
-            let individual = await getCedictEntry(edgeCaseSegments[i]);
-
+          if (segment.length == 1) {
             const item = {
-              token: edgeCaseSegments[i],
-              entries: individual,
+              token: segment,
+              entries: "punctuation",
             };
             dictEntries.push(item);
-            finalSegments.push(edgeCaseSegments[i]);
+          } else if (segment.length == 2) {
+            for (let i = 0; i < segment.length; i++) {
+              let individual = await getCedictEntry(segment[i]);
+  
+              const item = {
+                token: segment[i],
+                entries: individual,
+              };
+              dictEntries.push(item);
+              finalSegments.push(segment[i]);
+            }
+          } else {
+            const edgeCaseSegments = await recursiveSegment(segment);
+            for (let i = 0; i < edgeCaseSegments.length; i++) {
+              let individual = await getCedictEntry(edgeCaseSegments[i]);
+  
+              const item = {
+                token: edgeCaseSegments[i],
+                entries: individual,
+              };
+              dictEntries.push(item);
+              finalSegments.push(edgeCaseSegments[i]);
+            }
           }
         }
       } else {
@@ -208,6 +212,20 @@ app.post("/parse", async (req, res) => {
         segments: segments,
         parsed: llmPrediction,
       });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/definitionLookup", async (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    res.status(400).json({ error: "No input provided" });
+  }
+
+  try {
+    const dictionaryData = await getCedictEntry(token);
+    res.status(200).json({ dictionaryData: dictionaryData });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -263,88 +281,6 @@ const _recursiveSegmentImpl = async (segment) => {
   }
 
   return [segment];
-};
-
-const ollamaRequest = async (sentence, segments, dictionaryData, translation) => {
-  const buildUserPrompt = (sentence, segments, dictionaryData, translation) => {
-    const entryMap = new Map();
-    dictionaryData.forEach((entry) => {
-      entryMap.set(entry.token, entry);
-    });
-
-    const formattedSegments = segments.map((segment) => {
-
-      const entry = entryMap.get(segment);
-      if (!entry) {
-        return `${segment}\n   No dictionary entry found`;
-      }
-
-      const validEntries = [];
-      for (const [pinyin, entries] of Object.entries(entry.entries)) {
-
-        // Filter entries that match the segment token
-        const matchingEntries = entries.filter((e) => {
-          const isMatch = e.traditional === segment || e.simplified === segment;
-          return isMatch;
-        });
-
-        if (matchingEntries.length > 0) {
-          const definitions = matchingEntries
-            .flatMap((e) => e.english)
-            .join("; ");
-
-          validEntries.push(`- ${pinyin}: ${definitions}`);
-        }
-      }
-
-      const result =
-        validEntries.length > 0
-          ? `${segment}\n   ${validEntries.join("\n   ")}`
-          : `${segment}\n   No valid entries match token`;
-
-      return result;
-    });
-
-    const finalPrompt = `Sentence: ${sentence}\nTranslation: ${translation}\n\n CC-CEDICT Dictionary Data:\n${formattedSegments.join(
-      "\n\n"
-    )}`;
-
-    return finalPrompt;
-  };
-
-  const userPrompt = buildUserPrompt(sentence, segments, dictionaryData, translation);
-
-  console.log(userPrompt);
-  const ResponseFormat = z.object({
-    segments: z.array(
-        z.object({
-            token: z.string(),
-            pinyin: z.string(),
-            definition: z.string(),
-        })
-    )
-  });
-
-  const ollama = new Ollama({ host: OLLAMA_API_URL });
-  const model = "deepseek-r1:14b";
-  const response = await ollama.chat({
-    model: model,
-    messages: [
-        {
-            role: "system",
-            content: SYSTEM_PROMPT,
-        },
-        {
-            role: "user",
-            content: userPrompt,
-        },
-    ],
-    format: zodToJsonShema(ResponseFormat),
-  })
-
-  return ResponseFormat.parse(JSON.parse(response.message.content));
-//   console.log(userPrompt);
-//   return userPrompt;
 };
 
 const llmRequest = async (sentence, segments, dictionaryData, translation) => {
@@ -423,7 +359,8 @@ const llmRequest = async (sentence, segments, dictionaryData, translation) => {
 };
 
 // Test case: 你喜欢这个味道吗 simplified
-// Traditional: 你喜歡這個味道嗎
+// Traditional: 你喜歡這個味道嗎。
 // 你有光明的未来。
 // 萨哈达在伊斯兰教是信仰的证明。
 // 我让你玩
+// 他们已经参加了高考

@@ -91,7 +91,7 @@ function Ciyu({ text, pinyin, definition }) {
     return (
       <div className="flex flex-col justify-center items-center" style={{'color': fontColor}}>
         <div className="text-xl">
-          {convertPinyin(pinyin)}
+          {convertPinyin(pinyin) || '\u00A0'}
         </div>
         <div className="text-4xl">
           {text}
@@ -101,11 +101,11 @@ function Ciyu({ text, pinyin, definition }) {
   };
 
   return (
-    <div className="pane p-4 flex justify-center items-center flex-col max-w-[150px]">
+    <div className="pane px-7 flex justify-center items-center flex-col max-w-[300px] group">
       <div className="flex flex-row">
-        {pinyin.map((pinyinEntry, index) => <Zi text={text.substring(index, index + 1)} pinyin={pinyinEntry} />)}
+        {pinyin.map((pinyinEntry, index) => <Zi text={definition ? text.substring(index, index + 1) : text} pinyin={pinyinEntry} />)}
       </div>
-      <div className="definition">{definition}</div>
+      <div className="definition line-clamp-3 transition-all group-hover:line-clamp-none">{definition}</div>
     </div>
   );
 }

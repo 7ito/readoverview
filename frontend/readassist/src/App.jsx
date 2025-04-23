@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import MoonLoader from "react-spinners/MoonLoader";
 import Ciyu from "./components/Ciyu";
+import { ArrowLeft, CircleHelp } from 'lucide-react';
+import InfoModal from "./components/InfoModal";
+import { hasChineseText } from "./utils/Utils";
 
 const BASE_URL = "http://127.0.0.1:5000";
 
@@ -10,8 +13,33 @@ function App() {
   const [isPreview, setIsPreview] = useState(false);
   const [parsedData, setParsedData] = useState([]);
   const [translation, setTranslation] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isValid, setIsValid] = useState(false);
+  const editableRef = useRef(null);
+
+  useEffect(() => {
+    setIsValid(hasChineseText(userInput, 0.25));
+
+    if (!editableRef.current) return;
+
+    if (editableRef.current.innerHTML === '<br>') {
+      editableRef.current.innerHTML = '';
+    }
+  }, [userInput]);
+
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('hasVisited');
+    if (!hasVisited) {
+      setIsModalOpen(true);
+      localStorage.setItem('hasVisited', 'true');
+    }
+  }, []);
 
   const sendParse = async () => {
+    if (!isValid) {
+      return;
+    }
+
     setIsLoading(true);
     const response = await fetch(`${BASE_URL}/parse`, {
       method: "POST",
@@ -36,16 +64,18 @@ function App() {
   return (
     <div className="root-container flex bg-red-300 min-w-screen min-h-screen items-center justify-center">
       {isLoading ? (
-        <div>
+        <div className="flex flex-col items-center justify-center">
           <MoonLoader size={80} loading={isLoading} />
+          <span className="pt-[2em]">Please allow up to 60 seconds or more depending on the length of the sentence!</span>
+          <span className="pt-2">Click the icon at the top right for more information.</span>
         </div>
       ) : (
           <>
             {isPreview ? (
-              <div className="inner-container bg-red-300 flex flex-col items-center justify-center">
-                <button className="absolute top-0 left-0 focus:outline-0" onClick={() => resetPage()}>Back</button>
-                <div className="text-4xl text-black text-center py-3">{translation}</div>
-                <div className="flex items-start justify-center flex-wrap">
+              <div className="inner-container bg-red-300 flex flex-col items-center justify-center mx-[5em]">
+                <button className="absolute top-0 left-0 focus:outline-0 bg-red-300 px-[0.6em] py-[1.2em] cursor-pointer" onClick={() => resetPage()}><ArrowLeft /></button>
+                <div className="text-4xl text-black text-center pb-[2em]">{translation}</div>
+                <div className="flex items-start justify-center flex-wrap pt-3">
                   {parsedData.segments.map((entry) => (
                     <Ciyu
                       key={entry.token}
@@ -57,21 +87,31 @@ function App() {
                 </div>
               </div>
             ) : (
-              <div className="inner-container bg-red-400 min-w-[90vw] min-h-[90vh] rounded-md flex flex-col items-center justify-center">
-                <textarea
-                  type="text"
-                  className="w-[90vw] max-h-[90vh] p-4 text-4xl text-white text-center focus:outline-0 leading-normal resize-none"
-                  placeholder="Paste a Chinese sentence here!"
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
+              <div className="inner-container bg-red-400 w-[90vw] h-[90vh] rounded-md flex flex-col items-center justify-center">
+                <div
+                  ref={editableRef}
+                  className="flex items-center justify-center w-full h-full p-4 text-4xl text-white text-center focus:outline-0 leading-normal resize-none"
+                  onInput={(e) => setUserInput(e.currentTarget.textContent)}
+                  contentEditable="plaintext-only"
+                  data-placeholder="Paste a Chinese sentence here!"
                 >
-                </textarea>
+                </div>
+
+                {!isValid && userInput.length > 1 && (
+                  <div className="text-xl text-red-600">
+                    Please ensure at least 25% of text is Chinese characters
+                  </div>
+                )}
       
-                {userInput === "" ? "" : <button onClick={sendParse}>Go</button>}
+                {userInput.length > 0 && <button onClick={sendParse} className="text-[1.2em] font-bold px-[0.6em] py-[1.2em] cursor-pointer">Go</button>}
               </div>
             )}
           </>
       )}
+      <CircleHelp onClick={() => setIsModalOpen(true)} className="fixed right-3 top-3" />
+      <InfoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        
+      </InfoModal>
     </div>
   );
 }

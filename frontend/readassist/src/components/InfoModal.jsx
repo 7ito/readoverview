@@ -109,7 +109,7 @@ export default function InfoModal({ isOpen, onClose, children }) {
           </h2>
           <div className="prose flex flex-col">
             {children}
-            <span>(name) is a tool that gives you an at a glance overview/break down of a Chinese sentence.</span>
+            <span>HanziLens is a tool that gives you an at a glance overview/break down of a Chinese sentence.</span>
             <span>&nbsp;</span>       
             <span className="font-bold text-xl">Usage</span>
             <span>1. Paste or type in a Chinese sentence, and click Go</span>

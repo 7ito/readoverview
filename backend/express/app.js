@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import cedict from "cc-cedict";
 import translate from "translate";
-import OpenAI from "openai/index.mjs";
 import "dotenv/config";
 import { validateInputIsChinese } from "./middleware/validation.js";
 
@@ -13,6 +12,7 @@ const SYSTEM_PROMPT = `Instructions:
 You are a Mandarin language expert. You will be given a Mandarin sentence and it's English translation. Your job is to segment the sentence into its words (词语), and provide the pinyin reading and English definition for each word in the context of the sentence
 Important: 
 Pinyin should be formatted like this: 'ni3 hao3' (你好), 'ta1' (他), 'nu:3' (女)
+Make sure there is a space between pinyin: e.g. 'ni3 hao3' not 'ni3hao3'
 
 Format:
 Format response as JSON
@@ -22,17 +22,19 @@ Format response as JSON
   - "pinyin": Selected pronunciation
   - "definition": SINGLE most appropriate definition
 {
-  segments: [
+  "segments": [
     {
-      token: string,
-      pinyin: string,
-      definition: string
+      "token": string,
+      "pinyin": string,
+      "definition": string
     },
   ]
 }
 
-- Preserve all punctuation in a sentence: Return a segment like { token: "。", pinyin: "", definition: "" } or { token: "，", pinyin: "", definition: "" }
-- For segments of the sentence that are in English or are a number, just return the token with pinyin and definition empty. e.g. { token: "2024", pinyin: "", definition: "" } or { token: "NBA", pinyin: "", definition: "" }`;
+Do not include any markdown formatting to denote a JSON string.
+
+- Preserve all punctuation in a sentence: Return a segment like { "token": "。", "pinyin": "", "definition": "" } or { "token": "，", "pinyin": "", "definition": "" }
+- For segments of the sentence that are in English or are a number, just return the token with pinyin and definition empty. e.g. { "token": "2024", "pinyin": "", "definition": "" } or { "token": "NBA", "pinyin": "", "definition": "" }`;
 
 app.use(express.json());
 app.use(
@@ -159,31 +161,62 @@ const _recursiveSegmentImpl = async (segment) => {
 
 const llmRequest = async (sentence, translation) => {
   const userPrompt = `Sentence: ${sentence}\nTranslation: ${translation}`;
+  const model = "qwen/qwen-2.5-72b-instruct:free";
 
-  const client = new OpenAI({
-    baseURL: "https://api.deepseek.com",
-    apiKey: process.env.DEEPSEEK_API_KEY,
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'sentence_response',
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              "segments": {
+                type: "array",
+                items: {
+                  "token": {
+                    type: "string",
+                  },
+                  "pinyin": {
+                    type: "string",
+                  },
+                  "definition": {
+                    type: "string",
+                  },
+                },
+                required: ["token", "pinyin", "definition"],
+              }
+            }
+          },
+          required: ["segments"],
+        },
+      },
+    })
   });
 
-  const model = "deepseek-chat";
-
-  const response = await client.chat.completions.create({
-    model: model,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-      },
-      {
-        role: "user",
-        content: userPrompt,
-      },
-    ],
-    response_format: { type: "json_object" },
-  });
-
-  return JSON.parse(response.choices[0].message.content);
-};
+  const data = await response.json();
+  const result = data.choices[0].message.content;
+  console.log(result);
+  return(JSON.parse(result));
+}
 
 // Test case: 你喜欢这个味道吗 simplified
 // Traditional: 你喜歡這個味道嗎。
@@ -191,3 +224,16 @@ const llmRequest = async (sentence, translation) => {
 // 萨哈达在伊斯兰教是信仰的证明。
 // 我让你玩
 // 他们已经参加了高考
+
+
+// Testing
+// 中國經濟在相当长的历史时期中在世界上占有重要地位，其周期通常与王朝的兴衰更替對應。
+// Qwen72B Free: 25.9, 26.43, 22.8, 26.5, 23.66
+// Qwen72B: 40.11, 22.65, 35.65, 25.29, 31.8
+
+// 你有光明的未来。
+// Qwen72B Free: 7.08, 6.93, 7.31, 7.8, 7.2
+// Qwen72B: 8.63, 5.31, 7.9, 5.35, 5.98
+
+// 李白在蜀中長大，二十四歲開始出蜀漫遊各地，力圖獲得官員的舉薦而入仕，但事與願違多次碰壁，四十二歲時李白因身為高士而名動京師，獲唐玄宗徵召，出任翰林供奉，成為宮廷詩人，開展李白人生最光輝的時期，但兩年後李白即因被中傷和排擠而請辭，繼續踏上他的旅程。
+// Qwen72B Free: 1:03.47, 1:11.1,

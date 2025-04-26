@@ -137,19 +137,17 @@ export default function InfoModal({ isOpen, onClose, children }) {
 
             <span>&nbsp;</span>
             <span className="font-bold text-xl">Limitations</span>
-            <span>Currently, this is done by prompting DeepSeek V3, which unfortunately means inconsistency in the wording of</span>
-            <span>definitions, and significantly long loading times.</span>
-            <span>15-90+ seconds depending on the length of the sentence (the sentence in the example can be considered as short).</span>
-            <span>Longer sentences/paragraphs may take too long and trigger a time out from the DeepSeek API, which</span>
-            <span>can cause it to error.</span>
+            <span>Currently, this is done by prompting Qwen2.5 72B Instruct, which unfortunately means inconsistency in the wording of</span>
+            <span>definitions, and long loading times.</span>
+            <span>8-60+ seconds depending on the length of the sentence (the sentence in the example can be considered as short).</span>
+            <span>Longer sentences/paragraphs may take too long and trigger a time out from the API, which can cause it to error.</span>
             <span>The prompt is centered around analyzing sentences with semantic meaning, so shorter strings of text may</span>
             <span>yield off or unsatisfactory results.</span>
 
             <span>&nbsp;</span>
             <span className="font-bold text-xl">Next Steps</span>
             <span>The next major step for this project is to fine-tune a model specifically for analyzing and breaking down Chinese</span>
-            <span>sentences in this manner. This will provide massive reductions in time using a smaller specialized model compared</span>
-            <span>to the 671b parameter DeepSeek V3.</span>
+            <span>sentences in this manner. This will provide massive reductions in time using a smaller specialized model.</span>
           </div>
         </div>
       </div>

@@ -29,7 +29,7 @@ function Ciyu({ text, pinyin, definition }) {
 
   return (
     <div ref={parentRef} className="relative">
-      <div onClick={!pinyin && !definition ? undefined : togglePopup} className="pane px-7 flex justify-center items-center flex-col max-w-[300px]">
+      <div style={{ borderBottom: showPopup ? "3px solid #a87ba2" : "" }} onClick={!pinyin && !definition ? undefined : togglePopup} className="pane px-7 flex justify-center items-center flex-col max-w-[300px]">
         <div className="flex flex-row">
           {pinyin.map((pinyinEntry, index) => <Zi text={definition ? text.substring(index, index + 1) : text} pinyin={pinyinEntry} />)}
         </div>

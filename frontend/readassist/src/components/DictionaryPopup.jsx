@@ -3,8 +3,6 @@ import { convertPinyin } from "../utils/Utils";
 import { useZIndexStore } from "../stores/useZIndexStore";
 import { BookText } from "lucide-react";
 
-const BASE_URL = "http://127.0.0.1:5000";
-
 function DictionaryPopup({ token, parentRef }) {
   const { getNextZIndex } = useZIndexStore();
   const [dictionaryData, setDictionaryData] = useState([]);
@@ -34,7 +32,7 @@ function DictionaryPopup({ token, parentRef }) {
   }, [token, getNextZIndex, parentRef]);
 
   const dictionaryLookup = async (token) => {
-    const response = await fetch(`${BASE_URL}/definitionLookup`, {
+    const response = await fetch(`${import.meta.env.VITE_BASE_URL}/definitionLookup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,7 +40,6 @@ function DictionaryPopup({ token, parentRef }) {
       body: JSON.stringify({ token: token }),
     });
     const data = await response.json();
-    console.log(data.dictionaryData);
     setDictionaryData(data.dictionaryData);
   };
 
@@ -136,7 +133,7 @@ function DictionaryPopup({ token, parentRef }) {
         cursor: 'grab',
         position: 'fixed'
       }}
-      className="border border-black shadow-xl rounded-sm bg-amber-200 text-black w-[600px]"
+      className="border border-black shadow-xl rounded-sm bg-amber-200 text-black md:w-[400px] lg:w-[600px]"
       onClick={() => setZIndex(getNextZIndex())}
       onMouseDown={handleMouseDown}
     >

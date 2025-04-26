@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import MoonLoader from "react-spinners/MoonLoader";
+import GridLoader from "react-spinners/GridLoader";
 import Ciyu from "./components/Ciyu";
 import { ArrowLeft, CircleHelp } from 'lucide-react';
 import InfoModal from "./components/InfoModal";
 import { hasChineseText } from "./utils/Utils";
-
-const BASE_URL = "http://127.0.0.1:5000";
 
 function App() {
   const [userInput, setUserInput] = useState("");
@@ -41,7 +39,7 @@ function App() {
     }
 
     setIsLoading(true);
-    const response = await fetch(`${BASE_URL}/parse`, {
+    const response = await fetch(`${import.meta.env.VITE_BASE_URL}/parse`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,7 +47,6 @@ function App() {
       body: JSON.stringify({ sentence: userInput }),
     });
     const data = await response.json();
-    console.log(data);
     setParsedData(data.parsed);
     setTranslation(data.translation);
     setIsLoading(false);
@@ -64,8 +61,9 @@ function App() {
   return (
     <div className="root-container flex bg-red-300 min-w-screen min-h-screen items-center justify-center">
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center">
-          <MoonLoader size={80} loading={isLoading} />
+        <div className="flex flex-col items-center justify-center text-lg">
+          <span className="pb-[2em]">Breaking it down...</span>
+          <GridLoader size={40} loading={isLoading} />
           <span className="pt-[2em]">Please allow up to 60 seconds or more depending on the length of the sentence!</span>
           <span className="pt-2">Click the icon at the top right for more information.</span>
         </div>

@@ -94,7 +94,7 @@ function DictionaryPopup({ token, parentRef }) {
         popupRef.current.style.cursor = 'grab';
       }
     };
-    
+
     if (isDragging) {
       document.addEventListener('mousemove', handleMove);
       document.addEventListener('touchmove', handleMove, { passive: false });
@@ -166,11 +166,9 @@ function DictionaryPopup({ token, parentRef }) {
       onMouseDown={handleStartDrag}
       onTouchStart={handleStartDrag}
     >
-      <div className="p-2 pt-4">
-        {dictionaryData.map((entry, index) => (
-          <PinyinEntry key={index} entry={entry} />
-        ))}
-      </div>
+      {dictionaryData.map((entry, index) => (
+        <PinyinEntry key={index} entry={entry} />
+      ))}
       <a href={`https://www.mdbg.net/chinese/dictionary?wdqb=${token}`} target="_blank" rel="noopener noreferrer" className="absolute right-1 top-1 flex items-center">
         <BookText size={15} />MDBG
       </a>

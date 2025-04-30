@@ -43,48 +43,52 @@ function DictionaryPopup({ token, parentRef }) {
     setDictionaryData(data.dictionaryData);
   };
 
-  const handleMouseDown = (e) => {
-    const isTopBar =
-      e.clientY - e.currentTarget.getBoundingClientRect().top < 40;
+  const handleStartDrag = (e) => {
+    const isTopBar = (e.clientY || e.touches?.[0].clientY) - e.currentTarget.getBoundingClientRect().top < 40;
     if (isTopBar) {
       setZIndex(getNextZIndex());
       setIsDragging(true);
+      const clientX = e.clientX || e.touches?.[0].clientX;
+      const clientY = e.clientY || e.touches?.[0].clientY;
       dragStartPos.current = {
-        x: e.clientX - position.x,
-        y: e.clientY - position.y,
+        x: clientX - position.x,
+        y: clientY - position.y,
       };
       e.currentTarget.style.cursor = "grabbing";
     }
   };
 
-  const handleMouseUp = (e) => {
+  const handleStopDrag = () => {
     setIsDragging(false);
     if (popupRef.current) {
       popupRef.current.style.cursor = '';
     }
-  }
+  };
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMove = (e) => {
       if (!isDragging) return;
+      const clientX = e.clientX || e.touches?.[0].clientX;
+      const clientY = e.clientY || e.touches?.[0].clientY;
       setPosition({
-        x: e.clientX - dragStartPos.current.x,
-        y: e.clientY - dragStartPos.current.y,
+        x: clientX - dragStartPos.current.x,
+        y: clientY - dragStartPos.current.y,
       });
     }
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    }
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('touchmove', handleMove, { passive: false });
+      document.addEventListener('mouseup', handleStopDrag);
+      document.addEventListener('touchend', handleStopDrag);
+    } 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('mouseup', handleStopDrag);
+      document.removeEventListener('touchend', handleStopDrag);
     };
-  }, [isDragging]);
+  }, [isDragging, position]);
 
   const PinyinEntry = ({ entry }) => {
     return (
@@ -131,11 +135,13 @@ function DictionaryPopup({ token, parentRef }) {
         left: `${position.x}px`,
         top: `${position.y}px`,
         cursor: 'grab',
-        position: 'fixed'
+        position: 'fixed',
+        touchAction: 'none',
       }}
-      className="border border-black shadow-xl rounded-sm bg-amber-200 text-black md:w-[400px] lg:w-[600px]"
+      className="border border-black shadow-xl rounded-sm bg-amber-200 text-black w-[300px] md:w-[400px] lg:w-[600px]"
       onClick={() => setZIndex(getNextZIndex())}
-      onMouseDown={handleMouseDown}
+      onMouseDown={handleStartDrag}
+      onTouchStart={handleStartDrag}
     >
       {dictionaryData.map((entry) => (
         <PinyinEntry entry={entry} />

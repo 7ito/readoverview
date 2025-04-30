@@ -3,7 +3,7 @@ import Ciyu from "./components/Ciyu";
 import { ArrowLeft, CircleHelp } from "lucide-react";
 import InfoModal from "./components/InfoModal";
 import { hasChineseText } from "./utils/Utils";
-import CircleLoader from "react-spinners/CircleLoader";
+import SyncLoader from "react-spinners/SyncLoader";
 import { IncompleteJsonParser } from "incomplete-json-parser";
 
 function App() {
@@ -131,16 +131,15 @@ function App() {
 
   return (
     <div className="root-container flex flex-col bg-red-300 min-w-screen min-h-screen items-center justify-center">
-      <div>
+      <div className="absolute right-3 top-3 flex gap-2">
         <CircleHelp
           onClick={() => setIsModalOpen(true)}
-          className="absolute right-1 top-1"
         />
       </div>
         {isPreview ? (
           <div className="inner-container bg-red-300 flex flex-col items-center justify-center mx-[5em]">
             <button
-              className="absolute top-0 left-0 focus:outline-0 bg-red-300 px-[0.6em] py-[1.2em] cursor-pointer"
+              className="absolute top-0 left-0 focus:outline-0 bg-red-300 hover:bg-gray-100/60 px-[0.6em] py-[1.2em] cursor-pointer"
               onClick={() => resetPage()}
             >
               <ArrowLeft />
@@ -158,7 +157,7 @@ function App() {
                 />
               ))}
             </div>
-            {isLoading && <CircleLoader />}
+            {isLoading && <SyncLoader className="pt-[3em]" />}
           </div>
         ) : (
           <div className="inner-container bg-red-400 w-[90vw] h-[90vh] rounded-md flex flex-col items-center justify-center overflow-auto">
@@ -167,14 +166,8 @@ function App() {
               className="flex items-center justify-center w-full h-full p-4 text-xl lg:text-4xl text-white text-center focus:outline-0 leading-normal resize-none whitespace-pre-wrap break-all"
               onInput={handleInput}
               contentEditable="plaintext-only"
-              data-placeholder="Paste a Chinese sentence here!"
+              data-placeholder="Paste or type a Chinese sentence here"
             ></div>
-
-            {!isValid && userInput.length > 1 && (
-              <div className="text-sm lg:text-xl text-red-600 text-center">
-                Please ensure at least 25% of text is Chinese characters
-              </div>
-            )}
 
             {isCharLimitExceeded && (
               <div className="text-sm lg:text-xl text-red-600 text-center">
@@ -182,7 +175,21 @@ function App() {
               </div>
             )}
 
-            {/* Character count display */}
+            {!isValid && userInput.length > 1 && (
+              <div className="text-sm lg:text-xl text-red-600 text-center">
+                Please ensure at least 25% of text is Chinese characters
+              </div>
+            )}
+
+            {userInput.length > 0 && (
+              <button
+                onClick={sendParse}
+                className="bg-[#cc5052] hover:bg-[#b24648] border rounded-sm text-[1.2em] font-bold px-[1em] mx-[0.3em] py-[0.3em] my-[0.6em] cursor-pointer"
+              >
+                Go
+              </button>
+
+            )}
             <div
               className="text-base text-gray-600 lg:text-lg py-2"
               style={{
@@ -191,15 +198,6 @@ function App() {
             >
               {charCount}/{CHAR_LIMIT}
             </div>
-
-            {userInput.length > 0 && (
-              <button
-                onClick={sendParse}
-                className="text-[1.2em] font-bold px-[0.6em] py-[1.2em] cursor-pointer"
-              >
-                Go
-              </button>
-            )}
           </div>
         )}
 

@@ -97,28 +97,29 @@ export default function InfoModal({ isOpen, onClose, children }) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100"
+          className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100/60"
         >
           <X />
         </button>
 
         {/* Content */}
-        <div className="p-6 text-black">
-          <h2 id="modal-title" className="text-3xl font-bold mb-4 text-center">
+        <div className="p-6 text-black text-sm md:text-base lg:text-base">
+          <h2 id="modal-title" className="text-lg md:text-xl lg:text-3xl font-bold mb-4 text-center">
             About
           </h2>
           <div className="prose flex flex-col">
             {children}
             <span>HanziLens is a tool that gives you an at a glance overview/break down of a Chinese sentence.</span>
+            <span>To help you <b>understand</b> the sentence, not just give you a translation.</span>
             <span>&nbsp;</span>       
-            <span className="font-bold text-xl">Usage</span>
-            <span>1. Paste or type in a Chinese sentence, and click Go</span>
-            <span>2. Wait (I'm sorry, please allow up to 1 minute)</span>
+            <span className="font-bold text-base md:text-lg lg:text-xl">Usage</span>
+            <span>1. Paste or type in a Chinese sentence, and click <span className="text-white font-bold">Go</span></span>
+            <span>2. Wait (It can take up to 1 minute)</span>
             <span>3. Take a look</span>
 
             <span className="py-2">
-              <div className="text-4xl text-black text-center">You have a bright future.</div>
-              <div className="flex items-start justify-center flex-wrap pt-3">
+              <div className="text-lg md:text-2xl lg:text-4xl text-black text-center">You have a bright future.</div>
+              <div className="flex flex-col md:flex-row justify-center items-center flex-wrap pt-3">
                 {exampleParsed.map((entry) => (
                   <Ciyu
                     key={entry.token}
@@ -130,24 +131,28 @@ export default function InfoModal({ isOpen, onClose, children }) {
               </div>
             </span>
 
-            <span className="font-bold text-lg">Try it!</span>
-            <span>Clicking on a word/segment will bring up the full dictionary listing for that word, and the link on the bottom right</span>
-            <span>sends you to the MDBG entry.</span>
-            <span>The entries take up a lot of space, so you can drag them around the window, and click on the word again to close it.</span>
+            <span className="font-bold text-base md:text-lg lg:text-xl">Try it!</span>
+            <span className="pb-2">Clicking on a word/segment will bring up its dictionary listing, and there is a link on the bottom right to the MDBG entry for that word.</span>
+            <span>The entries take up a good amount of space, so you can drag them around the window, and click on the word again to close it.</span>
 
             <span>&nbsp;</span>
-            <span className="font-bold text-xl">Limitations</span>
-            <span>Currently, this is done by prompting Qwen2.5 72B Instruct, which unfortunately means inconsistency in the wording of</span>
-            <span>definitions, and long loading times.</span>
-            <span>8-60+ seconds depending on the length of the sentence (the sentence in the example can be considered as short).</span>
-            <span>Longer sentences/paragraphs may take too long and trigger a time out from the API, which can cause it to error.</span>
-            <span>The prompt is centered around analyzing sentences with semantic meaning, so shorter strings of text may</span>
-            <span>yield off or unsatisfactory results.</span>
+            <span className="font-bold text-base md:text-lg lg:text-xl">Notes</span>
+            <ul className="list-disc pl-[1em]">
+              <li>There is a maximum input size of 150 characters. Using the entire 150 characters is not recommended however, as sentences of that size take upwards of 1 minute to load.</li>
+              <li>The English translation is provided by Google Translate, and the sentence breakdown is done by prompting Qwen2.5 72B</li>
+            </ul>
 
             <span>&nbsp;</span>
-            <span className="font-bold text-xl">Next Steps</span>
-            <span>The next major step for this project is to fine-tune a model specifically for analyzing and breaking down Chinese</span>
-            <span>sentences in this manner. This will provide massive reductions in time using a smaller specialized model.</span>
+            <span className="font-bold text-base md:text-lg lg:text-xl">Limitations</span>
+            <ul className="list-disc pl-[1em]">
+              <li>Because the sentence processing is done by prompting Qwen2.5 72B Instruct, there is unfortunately means inconsistency and sometimes inaccuracy, as well as long loading times.</li>
+              <li>8-60+ seconds depending on the length of the sentence (the sentence in the example can be considered as short).</li>
+              <li>The prompt is centered around analyzing sentences with semantic meaning, so shorter strings of text may yield off or unsatisfactory results.</li>
+            </ul>
+
+            <span>&nbsp;</span>
+            <span className="font-bold text-base md:text-lg lg:text-xl">Next Steps</span>
+            <span>Fine-tuning a smaller specialized model specifically for analyzing and breaking down Chinese sentences in this manner would provide massive reductions in time.</span>
           </div>
         </div>
       </div>

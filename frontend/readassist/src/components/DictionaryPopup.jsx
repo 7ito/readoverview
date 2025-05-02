@@ -119,17 +119,17 @@ function DictionaryPopup({ token, parentRef, onClose }) {
     };
 
     if (isDragging) {
-      // document.addEventListener('mousemove', handleMove);
+      document.addEventListener('mousemove', handleMove);
       document.addEventListener('touchmove', handleMove, { passive: false });
-      // document.addEventListener('mouseup', handleStopDrag);
+      document.addEventListener('mouseup', handleStopDrag);
       document.addEventListener('touchend', handleStopDrag);
       document.addEventListener('touchcancel', handleStopDrag);
     }
     
     return () => {
-      // document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('touchmove', handleMove, { passive: false });
-      // document.removeEventListener('mouseup', handleStopDrag);
+      document.removeEventListener('mouseup', handleStopDrag);
       document.removeEventListener('touchend', handleStopDrag);
       document.removeEventListener('touchcancel', handleStopDrag);
     };

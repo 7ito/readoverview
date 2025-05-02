@@ -35,7 +35,7 @@ function Ciyu({ text, pinyin, definition }) {
         </div>
         <div className="definition line-clamp-3 transition-all group-hover:line-clamp-none">{definition}</div>
       </div>
-      {showPopup && <DictionaryPopup token={text} parentRef={parentRef} />}
+      {showPopup && <DictionaryPopup token={text} parentRef={parentRef} onClose={togglePopup} />}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { convertPinyin } from "../utils/Utils";
 import { useZIndexStore } from "../stores/useZIndexStore";
-import { BookText } from "lucide-react";
+import { BookText, X } from "lucide-react";
 
-function DictionaryPopup({ token, parentRef }) {
+function DictionaryPopup({ token, parentRef, onClose }) {
   const { getNextZIndex } = useZIndexStore();
   const [dictionaryData, setDictionaryData] = useState([]);
   const [zIndex, setZIndex] = useState(100);
@@ -44,41 +44,63 @@ function DictionaryPopup({ token, parentRef }) {
   };
 
   const handleStartDrag = (e) => {
-    // Prevent default to stop scroll/zoom on touch devices
+    let clientX, clientY;
+    console.log(e);
+
     if (e.type === 'touchstart') {
-      e.preventDefault();
+      const touch = e.touches[0];
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      if (clientY - rect.top < 40) {
+        e.preventDefault();
+      } else {
+        return;
+      }
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+      
+      const rect = e.currentTarget.getBoundingClientRect();
+      if (clientY - rect.top >= 40) {
+        return;
+      }
     }
-    
-    const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-    const rect = e.currentTarget.getBoundingClientRect();
-    const isTopBar = clientY - rect.top < 40;
-    
-    if (isTopBar) {
-      setZIndex(getNextZIndex());
-      setIsDragging(true);
-      
-      const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-      
-      dragStartPos.current = {
-        x: clientX - position.x,
-        y: clientY - position.y,
-      };
-      
-      e.currentTarget.style.cursor = "grabbing";
+
+    setZIndex(getNextZIndex());
+    setIsDragging(true);
+
+    dragStartPos.current = {
+      x: clientX - position.x,
+      y: clientY - position.y,
+    };
+
+    if (popupRef.current) {
+      popupRef.current.style.cursor = "grabbing";
     }
   };
 
   useEffect(() => {
     const handleMove = (e) => {
+      console.log(e);
       if (!isDragging) return;
       
       // Prevent default behavior (scrolling) when dragging
       if (e.cancelable) {
         e.preventDefault();
       }
-      
-      const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-      const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+      let clientX, clientY;
+
+      if (e.type === 'touchmove') {
+        const touch = e.touches[0];
+        clientX = touch.clientX;
+        clientY = touch.clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
       
       setPosition({
         x: clientX - dragStartPos.current.x,
@@ -86,8 +108,9 @@ function DictionaryPopup({ token, parentRef }) {
       });
     };
   
-    const handleStopDrag = () => {
+    const handleStopDrag = (e) => {
       if (!isDragging) return;
+      console.log(e);
       
       setIsDragging(false);
       if (popupRef.current) {
@@ -96,17 +119,17 @@ function DictionaryPopup({ token, parentRef }) {
     };
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleMove);
+      // document.addEventListener('mousemove', handleMove);
       document.addEventListener('touchmove', handleMove, { passive: false });
-      document.addEventListener('mouseup', handleStopDrag);
+      // document.addEventListener('mouseup', handleStopDrag);
       document.addEventListener('touchend', handleStopDrag);
       document.addEventListener('touchcancel', handleStopDrag);
     }
     
     return () => {
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('touchmove', handleMove);
-      document.removeEventListener('mouseup', handleStopDrag);
+      // document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('touchmove', handleMove, { passive: false });
+      // document.removeEventListener('mouseup', handleStopDrag);
       document.removeEventListener('touchend', handleStopDrag);
       document.removeEventListener('touchcancel', handleStopDrag);
     };
@@ -167,9 +190,13 @@ function DictionaryPopup({ token, parentRef }) {
       onTouchStart={handleStartDrag}
     >
       {dictionaryData.map((entry, index) => (
-        <PinyinEntry key={index} entry={entry} />
+        <div style={{ maxWidth: index == dictionaryData.length - 1 ? "80%" : "" }}>  
+          <PinyinEntry key={index} entry={entry} />
+        </div>
       ))}
-      <a href={`https://www.mdbg.net/chinese/dictionary?wdqb=${token}`} target="_blank" rel="noopener noreferrer" className="absolute right-1 top-1 flex items-center">
+      <X size={15} className="absolute right-1 top-1 hover:cursor-auto" onClick={onClose}/>
+
+      <a href={`https://www.mdbg.net/chinese/dictionary?wdqb=${token}`} target="_blank" rel="noopener noreferrer" className="absolute right-1 bottom-1 flex items-center">
         <BookText size={15} />MDBG
       </a>
     </div>

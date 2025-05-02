@@ -119,7 +119,7 @@ export default function InfoModal({ isOpen, onClose, children }) {
 
             <span className="py-2">
               <div className="text-lg md:text-2xl lg:text-4xl text-black text-center">You have a bright future.</div>
-              <div className="flex flex-col md:flex-row justify-center items-center flex-wrap pt-3">
+              <div className="flex flex-col md:flex-row gap-3 md:gap-0 justify-center items-center flex-wrap pt-3">
                 {exampleParsed.map((entry) => (
                   <Ciyu
                     key={entry.token}

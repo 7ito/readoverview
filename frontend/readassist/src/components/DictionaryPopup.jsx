@@ -3,33 +3,18 @@ import { convertPinyin } from "../utils/Utils";
 import { useZIndexStore } from "../stores/useZIndexStore";
 import { BookText, X } from "lucide-react";
 
-function DictionaryPopup({ token, parentRef, onClose }) {
+function DictionaryPopup({ token, onClose }) {
   const { getNextZIndex } = useZIndexStore();
   const [dictionaryData, setDictionaryData] = useState([]);
   const [zIndex, setZIndex] = useState(100);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartPos = useRef({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ dx: 0, dy: 0, });
   const popupRef = useRef(null);
 
   useEffect(() => {
     dictionaryLookup(token);
     setZIndex(getNextZIndex());
 
-    if (parentRef.current && popupRef.current) {
-      const parentRect = parentRef.current.getBoundingClientRect();
-      const popupWidth = popupRef.current.offsetWidth;
-
-      setPosition({ x: parentRect.left, y: parentRect.bottom + 8 });
-
-      if (parentRect.left + popupWidth > window.innerWidth) {
-        setPosition((prev) => ({
-          ...prev,
-          x: window.innerWidth - popupWidth - 8,
-        }));
-      }
-    }
-  }, [token, getNextZIndex, parentRef]);
+  }, [token, getNextZIndex]);
 
   const dictionaryLookup = async (token) => {
     const response = await fetch(`${import.meta.env.VITE_BASE_URL}/definitionLookup`, {
@@ -42,98 +27,6 @@ function DictionaryPopup({ token, parentRef, onClose }) {
     const data = await response.json();
     setDictionaryData(data.dictionaryData);
   };
-
-  const handleStartDrag = (e) => {
-    let clientX, clientY;
-    console.log(e);
-
-    if (e.type === 'touchstart') {
-      const touch = e.touches[0];
-      clientX = touch.clientX;
-      clientY = touch.clientY;
-
-      const rect = e.currentTarget.getBoundingClientRect();
-      if (clientY - rect.top < 40) {
-        e.preventDefault();
-      } else {
-        return;
-      }
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-      
-      const rect = e.currentTarget.getBoundingClientRect();
-      if (clientY - rect.top >= 40) {
-        return;
-      }
-    }
-
-    setZIndex(getNextZIndex());
-    setIsDragging(true);
-
-    dragStartPos.current = {
-      x: clientX - position.x,
-      y: clientY - position.y,
-    };
-
-    if (popupRef.current) {
-      popupRef.current.style.cursor = "grabbing";
-    }
-  };
-
-  useEffect(() => {
-    const handleMove = (e) => {
-      console.log(e);
-      if (!isDragging) return;
-      
-      // Prevent default behavior (scrolling) when dragging
-      if (e.cancelable) {
-        e.preventDefault();
-      }
-
-      let clientX, clientY;
-
-      if (e.type === 'touchmove') {
-        const touch = e.touches[0];
-        clientX = touch.clientX;
-        clientY = touch.clientY;
-      } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-      
-      setPosition({
-        x: clientX - dragStartPos.current.x,
-        y: clientY - dragStartPos.current.y,
-      });
-    };
-  
-    const handleStopDrag = (e) => {
-      if (!isDragging) return;
-      console.log(e);
-      
-      setIsDragging(false);
-      if (popupRef.current) {
-        popupRef.current.style.cursor = 'grab';
-      }
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMove);
-      document.addEventListener('touchmove', handleMove, { passive: false });
-      document.addEventListener('mouseup', handleStopDrag);
-      document.addEventListener('touchend', handleStopDrag);
-      document.addEventListener('touchcancel', handleStopDrag);
-    }
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('touchmove', handleMove, { passive: false });
-      document.removeEventListener('mouseup', handleStopDrag);
-      document.removeEventListener('touchend', handleStopDrag);
-      document.removeEventListener('touchcancel', handleStopDrag);
-    };
-  }, [isDragging]);
 
   const PinyinEntry = ({ entry }) => {
     return (
@@ -173,21 +66,79 @@ function DictionaryPopup({ token, parentRef, onClose }) {
     );
   };
 
+  const handleMouseDown = (e) => {
+    setZIndex(getNextZIndex());
+    const startPos = {
+      x: e.clientX - position.dx,
+      y: e.clientY - position.dy,
+    };
+
+    const handleMouseMove = (e) => {
+      const popup = popupRef.current;
+      if (!popup) return;
+
+      const dx = e.clientX - startPos.x;
+      const dy = e.clientY - startPos.y;
+
+      popup.style.transform = `translate(${dx}px, ${dy}px)`;
+      setPosition({ dx, dy });
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+  
+  const handleTouchStart = (e) => {
+    console.log(e);
+    e.preventDefault();
+    setZIndex(getNextZIndex());
+    const touch = e.touches[0];
+
+    const startPos = {
+      x: touch.clientX - position.dx,
+      y: touch.clientY - position.dy,
+    };
+
+    const handleTouchMove = (e) => {
+      console.log(e);
+      e.preventDefault();
+      const popup = popupRef.current;
+      if (!popup) return;
+
+      const touch = e.touches[0];
+      const dx = touch.clientX - startPos.x;
+      const dy = touch.clientY - startPos.y;
+
+      popup.style.transform = `translate(${dx}px, ${dy}px)`;
+      setPosition({ dx, dy });
+    };
+
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove, { passive: false });
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+  };
+  
   return (
     <div
       ref={popupRef}
       style={{ 
         zIndex: zIndex,
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        position: 'fixed',
+        position: 'absolute',
         touchAction: 'none',
+        userSelect: 'none',
       }}
       className="border border-black shadow-xl rounded-sm bg-amber-200 text-black w-[300px] md:w-[400px] lg:w-[600px]"
-      onClick={() => setZIndex(getNextZIndex())}
-      onMouseDown={handleStartDrag}
-      onTouchStart={handleStartDrag}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       {dictionaryData.map((entry, index) => (
         <div style={{ maxWidth: index == dictionaryData.length - 1 ? "80%" : "" }}>  

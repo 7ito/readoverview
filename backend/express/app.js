@@ -58,12 +58,12 @@ app.post("/parse", validateInputIsChinese, async (req, res) => {
   try {
     const translation = await translate(validatedText, { from: "zh", to: "en" });
     const userPrompt = `Sentence: ${validatedText}\nTranslation: ${translation}`;
-    const model = "qwen/qwen-2.5-72b-instruct:free";
+    const model = "qwen2.5-72b-instruct";
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${process.env.DASHSCOPE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -238,15 +238,7 @@ const _recursiveSegmentImpl = async (segment) => {
 // 我让你玩
 // 他们已经参加了高考
 
-
 // Testing
 // 中國經濟在相当长的历史时期中在世界上占有重要地位，其周期通常与王朝的兴衰更替對應。
-// Qwen72B Free: 25.9, 26.43, 22.8, 26.5, 23.66
-// Qwen72B: 40.11, 22.65, 35.65, 25.29, 31.8
-
 // 你有光明的未来。
-// Qwen72B Free: 7.08, 6.93, 7.31, 7.8, 7.2
-// Qwen72B: 8.63, 5.31, 7.9, 5.35, 5.98
-
 // 李白在蜀中長大，二十四歲開始出蜀漫遊各地，力圖獲得官員的舉薦而入仕，但事與願違多次碰壁，四十二歲時李白因身為高士而名動京師，獲唐玄宗徵召，出任翰林供奉，成為宮廷詩人，開展李白人生最光輝的時期，但兩年後李白即因被中傷和排擠而請辭，繼續踏上他的旅程。
-// Qwen72B Free: 1:03.47, 1:11.1, 1:17.4

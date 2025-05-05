@@ -39,7 +39,7 @@ Do not include any markdown formatting to denote a JSON string.
 app.use(express.json());
 app.use(
   cors({
-    origin: "https://hanzilens.com",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   })

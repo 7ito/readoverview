@@ -147,7 +147,7 @@ function App() {
             <div className="text-xl lg:text-4xl text-black text-center py-[2em]">
               {translation}
             </div>
-            <div className="flex flex-col md:flex-row items-center justify-center flex-wrap pt-3">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-center flex-wrap pt-3">
               {segments.map((entry) => (
                 <Ciyu
                   key={entry.token}
